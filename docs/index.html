@@ -540,6 +540,7 @@ function renderPlayers() {
   for (const [name, data] of Object.entries(PLAYERS)) {
     const alive = data.teams.filter(t => TEAM_DATA[t]?.ko);
     const totalProb = data.teams.reduce((s, t) => s + (TEAM_DATA[t]?.ko ? oddsToProb(BETTING_ODDS[t] || 0) : 0), 0);
+    const { gd } = getPlayerGroupStats(data.teams);
     html += `<div class="player-card"><div class="player-card-name">${name}</div>`;
     html += `<div class="player-card-meta">${alive.length} of ${data.teams.length} teams in knockout stage</div>`;
     for (const team of data.teams) {
@@ -559,7 +560,8 @@ function renderPlayers() {
       const flag = TEAM_DATA[topScorer.team]?.flag || '';
       html += `<div class="top-scorer-banner"><span class="scorer-label">⚽ Top scorer</span><span class="scorer-info">${topScorer.name} · ${flag} ${topScorer.team} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}</span></div>`;
     }
-    html += `<div class="player-footer"><span>Combined win probability</span><span class="val">${totalProb.toFixed(1)}%</span></div></div>`;
+    html += `<div class="player-footer"><span>Combined win probability</span><span class="val">${totalProb.toFixed(1)}%</span></div>`;
+    html += `<div class="player-footer"><span>Group stage GD</span><span class="val">${gd >= 0 ? '+' : ''}${gd}</span></div></div>`;
   }
 
   html += `<div class="player-card"><div class="player-card-name" style="color:var(--green)">Charity</div>`;

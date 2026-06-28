@@ -92,6 +92,10 @@ h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bott
 .prob-bar-mini .fill { height: 100%; background: var(--accent); }
 .player-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text2); }
 .player-footer .val { font-weight: 600; color: var(--accent); }
+.top-scorer-banner { margin: 10px 0 0; padding: 10px 0 0; border-top: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.scorer-label { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); font-weight: 500; white-space: nowrap; }
+.scorer-info { font-size: 0.85em; font-weight: 600; color: var(--green); text-align: right; }
+.lb-scorer { font-size: 0.75em; color: var(--green); margin-top: 3px; }
 
 /* Bracket */
 .bracket-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px 20px; }
@@ -304,6 +308,68 @@ const BETTING_ODDS = {
   "Cabo Verde": 150000, "Uzbekistan": 250000
 };
 
+const TOP_SCORERS = {
+  "Mexico":                   { name: "Santiago Giménez",   goals: 3 },
+  "South Africa":             { name: "Percy Tau",           goals: 2 },
+  "South Korea":              { name: "Son Heung-min",       goals: 2 },
+  "Czechia":                  { name: "Patrik Schick",       goals: 1 },
+  "Switzerland":              { name: "Breel Embolo",        goals: 3 },
+  "Canada":                   { name: "Alphonso Davies",     goals: 4 },
+  "Bosnia and Herzegovina":   { name: "Edin Džeko",          goals: 2 },
+  "Qatar":                    { name: "Akram Afif",          goals: 1 },
+  "Brazil":                   { name: "Vinicius Jr.",        goals: 4 },
+  "Morocco":                  { name: "Youssef En-Nesyri",   goals: 3 },
+  "Scotland":                 { name: "Che Adams",           goals: 1 },
+  "Haiti":                    { name: "Duckens Nazon",       goals: 1 },
+  "USA":                      { name: "Christian Pulisic",   goals: 3 },
+  "Australia":                { name: "Mitchell Duke",       goals: 2 },
+  "Paraguay":                 { name: "Miguel Almirón",      goals: 1 },
+  "Türkiye":                  { name: "Hakan Çalhanoğlu",   goals: 2 },
+  "Germany":                  { name: "Kai Havertz",         goals: 3 },
+  "Côte d'Ivoire":            { name: "Sébastien Haller",   goals: 2 },
+  "Ecuador":                  { name: "Enner Valencia",      goals: 2 },
+  "Curaçao":                  { name: "Cuco Martina",        goals: 1 },
+  "Netherlands":              { name: "Memphis Depay",       goals: 3 },
+  "Japan":                    { name: "Kaoru Mitoma",        goals: 3 },
+  "Sweden":                   { name: "Viktor Gyökeres",     goals: 2 },
+  "Tunisia":                  { name: "Wahbi Khazri",        goals: 0 },
+  "Belgium":                  { name: "Romelu Lukaku",       goals: 2 },
+  "Egypt":                    { name: "Mohamed Salah",       goals: 3 },
+  "Iran":                     { name: "Mehdi Taremi",        goals: 1 },
+  "New Zealand":              { name: "Chris Wood",          goals: 1 },
+  "Spain":                    { name: "Álvaro Morata",       goals: 2 },
+  "Cabo Verde":               { name: "Ryan Mendes",         goals: 1 },
+  "Uruguay":                  { name: "Darwin Núñez",        goals: 1 },
+  "Saudi Arabia":             { name: "Salem Al-Dawsari",    goals: 1 },
+  "France":                   { name: "Kylian Mbappé",       goals: 5 },
+  "Norway":                   { name: "Erling Haaland",      goals: 3 },
+  "Senegal":                  { name: "Sadio Mané",          goals: 1 },
+  "Iraq":                     { name: "Mohanad Ali",         goals: 1 },
+  "Argentina":                { name: "Lionel Messi",        goals: 5 },
+  "Austria":                  { name: "Marko Arnautović",    goals: 2 },
+  "Algeria":                  { name: "Riyad Mahrez",        goals: 1 },
+  "Jordan":                   { name: "Mousa Al-Taamari",    goals: 1 },
+  "Colombia":                 { name: "James Rodríguez",     goals: 3 },
+  "Portugal":                 { name: "Cristiano Ronaldo",   goals: 4 },
+  "DR Congo":                 { name: "Cédric Bakambu",      goals: 2 },
+  "Uzbekistan":               { name: "Eldor Shomurodov",    goals: 0 },
+  "England":                  { name: "Harry Kane",          goals: 3 },
+  "Croatia":                  { name: "Andrej Kramarić",     goals: 2 },
+  "Ghana":                    { name: "André Ayew",          goals: 2 },
+  "Panama":                   { name: "Rolando Blackburn",   goals: 1 }
+};
+
+function getTopScorerForPlayer(teams) {
+  let top = null;
+  for (const team of teams) {
+    if (!TEAM_DATA[team]?.ko) continue;
+    const scorer = TOP_SCORERS[team];
+    if (!scorer || scorer.goals === 0) continue;
+    if (!top || scorer.goals > top.goals) top = { ...scorer, team };
+  }
+  return top;
+}
+
 function oddsToProb(odds) { return odds ? (100 / (odds / 100 + 1)) : 0; }
 
 function getTeamOwner(teamName) {
@@ -410,9 +476,13 @@ function renderLeaderboard() {
     else if (i === 1) { prize = '🥈 £15'; prizeStyle = 'color:var(--text2);font-weight:600'; }
     else if (isSpoon) { prize = '🥄 £5'; prizeStyle = 'color:var(--accent2);font-weight:600'; }
 
+    const topScorer = getTopScorerForPlayer(p.teams);
+    const scorerLine = topScorer
+      ? `<div class="lb-scorer">⚽ ${topScorer.name} · ${TEAM_DATA[topScorer.team]?.flag || ''} ${topScorer.team} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}</div>`
+      : '';
     html += `<tr>
       <td class="lb-rank-num">${i + 1}</td>
-      <td><div class="lb-name">${p.name}</div><div class="lb-teams">${p.teams.map(t => { const td = TEAM_DATA[t]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div></td>
+      <td><div class="lb-name">${p.name}</div><div class="lb-teams">${p.teams.map(t => { const td = TEAM_DATA[t]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div>${scorerLine}</td>
       <td class="lb-alive" style="text-align:center">${p.alive.length}/${p.total}</td>
       <td><div class="lb-prob">${p.totalProb.toFixed(1)}%</div><div class="lb-odds">Best +${p.bestOdds < 999999 ? p.bestOdds.toLocaleString() : '—'}</div></td>
       <td style="${prizeStyle};white-space:nowrap">${prize}</td>
@@ -483,6 +553,11 @@ function renderPlayers() {
         <span class="team-status ${inKO ? 'status-alive' : 'status-eliminated'}">${inKO ? 'In' : 'Out'}</span>
         ${inKO && odds ? `<span class="team-odds-label">+${odds.toLocaleString()}</span><div class="prob-bar-mini"><div class="fill" style="width:${Math.min(prob * 3, 100)}%"></div></div>` : ''}
       </div>`;
+    }
+    const topScorer = getTopScorerForPlayer(data.teams);
+    if (topScorer) {
+      const flag = TEAM_DATA[topScorer.team]?.flag || '';
+      html += `<div class="top-scorer-banner"><span class="scorer-label">⚽ Top scorer</span><span class="scorer-info">${topScorer.name} · ${flag} ${topScorer.team} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}</span></div>`;
     }
     html += `<div class="player-footer"><span>Combined win probability</span><span class="val">${totalProb.toFixed(1)}%</span></div></div>`;
   }

@@ -280,7 +280,7 @@ const TEAM_DATA = {
   "France":       { group: "I", gp: 3, w: 3, d: 0, l: 0, gf: 9, ga: 1, pts: 9, pos: 1, ko: true, flag: "🇫🇷" },
   "Norway":       { group: "I", gp: 3, w: 2, d: 0, l: 1, gf: 4, ga: 3, pts: 6, pos: 2, ko: true, flag: "🇳🇴" },
   "Senegal":      { group: "I", gp: 3, w: 0, d: 0, l: 3, gf: 2, ga: 5, pts: 0, pos: 3, ko: true, flag: "🇸🇳" },
-  "Iraq":         { group: "I", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 7, pts: 0, pos: 4, ko: false, flag: "🇮🇶" },
+  "Iraq":         { group: "I", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 12, pts: 0, pos: 4, ko: false, flag: "🇮🇶" },
   "Argentina":    { group: "J", gp: 3, w: 3, d: 0, l: 0, gf: 8, ga: 1, pts: 9, pos: 1, ko: true, flag: "🇦🇷" },
   "Austria":      { group: "J", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 2, ko: true, flag: "🇦🇹" },
   "Algeria":      { group: "J", gp: 3, w: 1, d: 1, l: 1, gf: 2, ga: 4, pts: 4, pos: 3, ko: true, flag: "🇩🇿" },
@@ -459,12 +459,14 @@ function renderLeaderboard() {
     return { name, teams: data.teams, alive, totalProb, bestOdds, total: data.teams.length, pts, gd };
   }).sort((a, b) => b.alive.length !== a.alive.length ? b.alive.length - a.alive.length : b.totalProb - a.totalProb);
 
-  // Wooden spoon: fewest teams alive, then lowest group stage pts, then worst GD
-  const spoonStats = [...stats].sort((a, b) =>
-    a.alive.length !== b.alive.length ? a.alive.length - b.alive.length :
-    a.pts !== b.pts ? a.pts - b.pts : a.gd - b.gd
-  );
-  const spoon = spoonStats[0];
+  // Wooden spoon: player whose single worst team has the fewest pts, then worst GD
+  const spoon = Object.entries(PLAYERS).map(([name, data]) => {
+    const worstTeam = data.teams.map(t => {
+      const td = TEAM_DATA[t];
+      return td ? { team: t, pts: td.pts, gd: td.gf - td.ga } : { team: t, pts: 999, gd: 999 };
+    }).sort((a, b) => a.pts !== b.pts ? a.pts - b.pts : a.gd - b.gd)[0];
+    return { name, worstPts: worstTeam.pts, worstGD: worstTeam.gd, worstTeamName: worstTeam.team };
+  }).sort((a, b) => a.worstPts !== b.worstPts ? a.worstPts - b.worstPts : a.worstGD - b.worstGD)[0];
 
   let html = `<h2>Leaderboard</h2><p class="section-sub">£${ENTRY} entry each &bull; £${POT} total pot</p>`;
   html += '<table class="lb-table"><thead><tr><th></th><th>Player</th><th>Alive</th><th>Win %</th><th>Prize</th></tr></thead><tbody>';
@@ -519,7 +521,7 @@ function renderLeaderboard() {
     <div class="prize-item">
       <div class="prize-label">🥄 Wooden Spoon</div>
       <div class="prize-value">£5</div>
-      <div class="prize-desc">Fewest teams, worst GD</div>
+      <div class="prize-desc">Worst team, worst goal difference</div>
       <div class="prize-currently">Currently</div>
       <div class="prize-candidate">${spoon?.name}</div>
     </div>

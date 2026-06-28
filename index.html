@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC 2026 Sweepstake</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf9f6;
+  --white: #ffffff;
+  --text: #1a1a1a;
+  --text2: #666666;
+  --text3: #999999;
+  --border: #e0e0e0;
+  --border-light: #f0f0f0;
+  --accent: #326891;
+  --accent2: #c13b2a;
+  --green: #1a7a2e;
+  --green-bg: #e8f5e9;
+  --red-bg: #fce8e6;
+  --gold: #b8860b;
+  --blue-bg: #e3f2fd;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', -apple-system, system-ui, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* Header */
+.header { max-width: 720px; margin: 0 auto; padding: 48px 20px 32px; text-align: center; border-bottom: 1px solid var(--text); }
+.header h1 { font-family: var(--serif); font-size: 2.8em; font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: 4px; }
+.header p { font-size: 0.85em; color: var(--text2); letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Nav */
+.nav { max-width: 720px; margin: 0 auto; padding: 0 20px; display: flex; border-bottom: 1px solid var(--border); }
+.nav-item { padding: 14px 0; margin-right: 28px; font-size: 0.85em; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; letter-spacing: 0.01em; }
+.nav-item:hover { color: var(--text); }
+.nav-item.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* Container */
+.container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+
+/* Sections */
+.section { display: none; padding: 32px 0 60px; }
+.section.active { display: block; }
+h2 { font-family: var(--serif); font-size: 1.6em; font-weight: 700; margin-bottom: 4px; }
+h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bottom: 16px; }
+.section-sub { font-size: 0.85em; color: var(--text2); margin-bottom: 24px; }
+
+/* Leaderboard */
+.lb-table { width: 100%; border-collapse: collapse; }
+.lb-table th { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); font-weight: 500; padding: 0 0 8px; text-align: left; border-bottom: 2px solid var(--text); }
+.lb-table th:last-child, .lb-table td:last-child { text-align: right; }
+.lb-table th:nth-child(3), .lb-table td:nth-child(3) { text-align: center; }
+.lb-table td { padding: 14px 0; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-name { font-weight: 600; font-size: 1em; }
+.lb-teams { font-size: 0.8em; color: var(--text2); margin-top: 2px; }
+.lb-alive { font-weight: 600; }
+.lb-prob { font-size: 0.85em; color: var(--accent); font-weight: 500; }
+.lb-odds { font-size: 0.8em; color: var(--text2); }
+.lb-elim { text-decoration: line-through; color: var(--text3); }
+.lb-rank-num { font-family: var(--serif); font-size: 1.2em; color: var(--text3); width: 30px; }
+.charity-row td { color: var(--green); }
+
+/* Prize */
+.prize-box { display: flex; gap: 1px; background: var(--border); margin-top: 32px; }
+.prize-item { flex: 1; background: var(--white); padding: 24px; text-align: center; }
+.prize-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 4px; }
+.prize-value { font-family: var(--serif); font-size: 1.1em; font-weight: 700; }
+
+/* Player cards */
+.players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1px; background: var(--border); }
+.player-card { background: var(--white); padding: 24px; }
+.player-card-name { font-family: var(--serif); font-size: 1.2em; font-weight: 700; margin-bottom: 4px; }
+.player-card-meta { font-size: 0.8em; color: var(--text2); margin-bottom: 16px; }
+.team-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border-light); }
+.team-row:first-of-type { border-top: none; }
+.team-flag { font-size: 1.1em; }
+.team-name { flex: 1; font-size: 0.9em; }
+.team-status { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.status-alive { color: var(--green); }
+.status-eliminated { color: var(--text3); text-decoration: line-through; }
+.team-odds-label { font-size: 0.8em; color: var(--text2); }
+.prob-bar-mini { width: 48px; height: 3px; background: var(--border); overflow: hidden; }
+.prob-bar-mini .fill { height: 100%; background: var(--accent); }
+.player-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text2); }
+.player-footer .val { font-weight: 600; color: var(--accent); }
+
+/* Bracket */
+.bracket-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px 20px; }
+.bracket { display: flex; gap: 32px; min-width: 1100px; }
+.round { display: flex; flex-direction: column; gap: 6px; min-width: 190px; }
+.round-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); font-weight: 500; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 2px solid var(--text); }
+.bk-match { background: var(--white); border: 1px solid var(--border); font-size: 0.82em; }
+.bk-match-date { font-size: 0.75em; color: var(--text3); padding: 4px 8px; border-bottom: 1px solid var(--border-light); }
+.bk-team { display: flex; align-items: center; gap: 6px; padding: 5px 8px; }
+.bk-team + .bk-team { border-top: 1px solid var(--border-light); }
+.bk-team .owner { font-size: 0.8em; color: var(--accent); }
+.bk-team .score { margin-left: auto; font-weight: 600; }
+.bk-team.winner { background: var(--green-bg); }
+.bk-final { border: 2px solid var(--text); }
+
+/* Matches */
+.match-day { margin-bottom: 32px; }
+.match-day-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); font-weight: 500; padding-bottom: 8px; border-bottom: 2px solid var(--text); margin-bottom: 0; }
+.match-item { padding: 20px 0; border-bottom: 1px solid var(--border-light); }
+.match-item:last-child { border-bottom: none; }
+.match-meta { font-size: 0.75em; color: var(--text3); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.match-line { display: flex; align-items: center; gap: 12px; font-size: 1.05em; }
+.match-line .team { flex: 1; }
+.match-line .team:last-child { text-align: right; }
+.match-line .vs { font-size: 0.7em; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
+.match-owner { font-size: 0.75em; color: var(--accent); font-weight: 500; }
+.match-prob { margin-top: 10px; }
+.prob-row { display: flex; align-items: center; gap: 8px; }
+.prob-bar { flex: 1; height: 4px; background: var(--border); display: flex; overflow: hidden; }
+.prob-home { background: var(--accent); height: 100%; }
+.prob-draw { background: var(--text3); height: 100%; }
+.prob-away { background: var(--accent2); height: 100%; }
+.prob-labels { display: flex; justify-content: space-between; font-size: 0.7em; color: var(--text3); margin-top: 4px; }
+
+/* Filter */
+.filter-bar { margin-bottom: 24px; }
+.filter-bar select { padding: 6px 10px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-size: 0.85em; font-family: var(--sans); }
+
+/* Side Bets */
+.bet-form { background: var(--white); border: 1px solid var(--border); padding: 24px; margin-bottom: 32px; }
+.bet-form h3 { margin-bottom: 20px; }
+.form-row { display: flex; gap: 16px; margin-bottom: 14px; }
+.form-group { flex: 1; min-width: 0; }
+.form-group label { display: block; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); margin-bottom: 4px; font-weight: 500; }
+.form-group select, .form-group input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-size: 0.9em; font-family: var(--sans); }
+.form-group select:focus, .form-group input:focus { outline: none; border-color: var(--text); }
+.btn { padding: 10px 24px; border: none; cursor: pointer; font-weight: 600; font-size: 0.85em; font-family: var(--sans); transition: all 0.15s; letter-spacing: 0.02em; }
+.btn-primary { background: var(--text); color: var(--white); }
+.btn-primary:hover { background: #333; }
+.btn-accept { background: var(--green); color: var(--white); padding: 6px 14px; font-size: 0.8em; }
+.btn-decline { background: var(--white); color: var(--accent2); border: 1px solid var(--accent2); padding: 6px 14px; font-size: 0.8em; }
+
+.bets-section-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); font-weight: 500; padding-bottom: 8px; border-bottom: 2px solid var(--text); margin-bottom: 0; margin-top: 28px; }
+.bet-card { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
+.bet-card:last-child { border-bottom: none; }
+.bet-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.bet-status { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.bet-status.pending { color: var(--gold); }
+.bet-status.accepted { color: var(--green); }
+.bet-status.settled { color: var(--text3); }
+.bet-players { font-size: 0.9em; }
+.bet-match-info { font-size: 0.8em; color: var(--text2); margin-top: 2px; }
+.bet-stake { font-size: 0.85em; font-weight: 600; color: var(--text); }
+.bet-actions { margin-top: 8px; display: flex; gap: 8px; }
+.no-bets { padding: 40px 0; text-align: center; color: var(--text3); font-size: 0.9em; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .header h1 { font-size: 2em; }
+  .header { padding: 32px 20px 24px; }
+  .nav-item { margin-right: 16px; font-size: 0.8em; padding: 12px 0; }
+  .players-grid { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; gap: 10px; }
+  .match-line { font-size: 0.95em; }
+  .prize-box { flex-direction: column; gap: 1px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>World Cup 2026 Sweepstake</h1>
+  <p>FIFA World Cup &bull; USA, Canada &amp; Mexico</p>
+</div>
+
+<div class="nav">
+  <div class="nav-item active" onclick="showSection('leaderboard', this)">Leaderboard</div>
+  <div class="nav-item" onclick="showSection('players', this)">Players</div>
+  <div class="nav-item" onclick="showSection('bracket', this)">Bracket</div>
+  <div class="nav-item" onclick="showSection('matches', this)">Matches</div>
+  <div class="nav-item" onclick="showSection('sidebets', this)">Side Bets</div>
+</div>
+
+<div class="container">
+  <div id="leaderboard" class="section active"></div>
+  <div id="players" class="section"></div>
+  <div id="bracket" class="section"></div>
+  <div id="matches" class="section"></div>
+  <div id="sidebets" class="section"></div>
+</div>
+
+<script>
+const PLAYERS = {
+  "Sam T": { teams: ["England", "USA", "Sweden", "Qatar", "Bosnia and Herzegovina"] },
+  "Sam L": { teams: ["Brazil", "Japan", "Ghana", "Curaçao", "Czechia"] },
+  "Matt": { teams: ["France", "Mexico", "Türkiye", "Haiti", "DR Congo"] },
+  "Paul": { teams: ["Spain", "Switzerland", "Egypt", "Jordan", "Cabo Verde"] },
+  "Rod": { teams: ["Germany", "Senegal", "Norway", "Iraq", "South Africa"] },
+  "Dave": { teams: ["Portugal", "Colombia", "Scotland", "Uzbekistan", "New Zealand"] },
+  "Martin": { teams: ["Argentina", "Australia", "Algeria", "Morocco", "Panama", "Tunisia"] }
+};
+
+const CHARITY_TEAMS = ["Netherlands", "Belgium", "Uruguay", "Ecuador", "South Korea", "Iran", "Saudi Arabia", "Côte d'Ivoire", "Paraguay", "Canada", "Austria"];
+
+const TEAM_DATA = {
+  "Mexico":       { group: "A", gp: 3, w: 3, d: 0, l: 0, gf: 8, ga: 2, pts: 9, pos: 1, ko: true, flag: "🇲🇽" },
+  "South Africa": { group: "A", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 4, pts: 4, pos: 2, ko: true, flag: "🇿🇦" },
+  "South Korea":  { group: "A", gp: 3, w: 1, d: 0, l: 2, gf: 3, ga: 4, pts: 3, pos: 3, ko: false, flag: "🇰🇷" },
+  "Czechia":      { group: "A", gp: 3, w: 0, d: 1, l: 2, gf: 2, ga: 6, pts: 1, pos: 4, ko: false, flag: "🇨🇿" },
+  "Switzerland":  { group: "B", gp: 3, w: 2, d: 1, l: 0, gf: 6, ga: 2, pts: 7, pos: 1, ko: true, flag: "🇨🇭" },
+  "Canada":       { group: "B", gp: 3, w: 1, d: 1, l: 1, gf: 7, ga: 2, pts: 4, pos: 2, ko: true, flag: "🇨🇦" },
+  "Bosnia and Herzegovina": { group: "B", gp: 3, w: 1, d: 1, l: 1, gf: 2, ga: 3, pts: 4, pos: 3, ko: true, flag: "🇧🇦" },
+  "Qatar":        { group: "B", gp: 3, w: 0, d: 1, l: 2, gf: 1, ga: 9, pts: 1, pos: 4, ko: false, flag: "🇶🇦" },
+  "Brazil":       { group: "C", gp: 3, w: 2, d: 1, l: 0, gf: 8, ga: 2, pts: 7, pos: 1, ko: true, flag: "🇧🇷" },
+  "Morocco":      { group: "C", gp: 3, w: 2, d: 1, l: 0, gf: 5, ga: 2, pts: 7, pos: 2, ko: true, flag: "🇲🇦" },
+  "Scotland":     { group: "C", gp: 3, w: 1, d: 0, l: 2, gf: 2, ga: 5, pts: 3, pos: 3, ko: false, flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  "Haiti":        { group: "C", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 7, pts: 0, pos: 4, ko: false, flag: "🇭🇹" },
+  "USA":          { group: "D", gp: 3, w: 2, d: 0, l: 1, gf: 6, ga: 2, pts: 6, pos: 1, ko: true, flag: "🇺🇸" },
+  "Australia":    { group: "D", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 2, ko: true, flag: "🇦🇺" },
+  "Paraguay":     { group: "D", gp: 3, w: 1, d: 1, l: 1, gf: 2, ga: 4, pts: 4, pos: 3, ko: true, flag: "🇵🇾" },
+  "Türkiye":      { group: "D", gp: 3, w: 1, d: 0, l: 2, gf: 3, ga: 5, pts: 3, pos: 4, ko: false, flag: "🇹🇷" },
+  "Germany":      { group: "E", gp: 3, w: 2, d: 0, l: 1, gf: 8, ga: 2, pts: 6, pos: 1, ko: true, flag: "🇩🇪" },
+  "Côte d'Ivoire":{ group: "E", gp: 3, w: 2, d: 0, l: 1, gf: 4, ga: 2, pts: 6, pos: 2, ko: true, flag: "🇨🇮" },
+  "Ecuador":      { group: "E", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 3, ko: true, flag: "🇪🇨" },
+  "Curaçao":      { group: "E", gp: 3, w: 0, d: 1, l: 2, gf: 1, ga: 9, pts: 1, pos: 4, ko: false, flag: "🇨🇼" },
+  "Netherlands":  { group: "F", gp: 3, w: 2, d: 1, l: 0, gf: 8, ga: 2, pts: 7, pos: 1, ko: true, flag: "🇳🇱" },
+  "Japan":        { group: "F", gp: 3, w: 1, d: 2, l: 0, gf: 6, ga: 2, pts: 5, pos: 2, ko: true, flag: "🇯🇵" },
+  "Sweden":       { group: "F", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 3, ko: true, flag: "🇸🇪" },
+  "Tunisia":      { group: "F", gp: 3, w: 0, d: 0, l: 3, gf: 0, ga: 10, pts: 0, pos: 4, ko: false, flag: "🇹🇳" },
+  "Belgium":      { group: "G", gp: 3, w: 1, d: 2, l: 0, gf: 5, ga: 2, pts: 5, pos: 1, ko: true, flag: "🇧🇪" },
+  "Egypt":        { group: "G", gp: 3, w: 1, d: 2, l: 0, gf: 4, ga: 2, pts: 5, pos: 2, ko: true, flag: "🇪🇬" },
+  "Iran":         { group: "G", gp: 3, w: 1, d: 0, l: 2, gf: 2, ga: 2, pts: 3, pos: 3, ko: false, flag: "🇮🇷" },
+  "New Zealand":  { group: "G", gp: 3, w: 0, d: 1, l: 2, gf: 1, ga: 6, pts: 1, pos: 4, ko: false, flag: "🇳🇿" },
+  "Spain":        { group: "H", gp: 3, w: 2, d: 1, l: 0, gf: 6, ga: 1, pts: 7, pos: 1, ko: true, flag: "🇪🇸" },
+  "Cabo Verde":   { group: "H", gp: 3, w: 0, d: 3, l: 0, gf: 2, ga: 2, pts: 3, pos: 2, ko: true, flag: "🇨🇻" },
+  "Uruguay":      { group: "H", gp: 3, w: 0, d: 2, l: 1, gf: 2, ga: 3, pts: 2, pos: 3, ko: false, flag: "🇺🇾" },
+  "Saudi Arabia": { group: "H", gp: 3, w: 0, d: 1, l: 2, gf: 1, ga: 5, pts: 1, pos: 4, ko: false, flag: "🇸🇦" },
+  "France":       { group: "I", gp: 3, w: 3, d: 0, l: 0, gf: 9, ga: 1, pts: 9, pos: 1, ko: true, flag: "🇫🇷" },
+  "Norway":       { group: "I", gp: 3, w: 2, d: 0, l: 1, gf: 4, ga: 3, pts: 6, pos: 2, ko: true, flag: "🇳🇴" },
+  "Senegal":      { group: "I", gp: 3, w: 0, d: 0, l: 3, gf: 2, ga: 5, pts: 0, pos: 3, ko: true, flag: "🇸🇳" },
+  "Iraq":         { group: "I", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 7, pts: 0, pos: 4, ko: false, flag: "🇮🇶" },
+  "Argentina":    { group: "J", gp: 3, w: 3, d: 0, l: 0, gf: 8, ga: 1, pts: 9, pos: 1, ko: true, flag: "🇦🇷" },
+  "Austria":      { group: "J", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 2, ko: true, flag: "🇦🇹" },
+  "Algeria":      { group: "J", gp: 3, w: 1, d: 1, l: 1, gf: 2, ga: 4, pts: 4, pos: 3, ko: true, flag: "🇩🇿" },
+  "Jordan":       { group: "J", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 6, pts: 0, pos: 4, ko: false, flag: "🇯🇴" },
+  "Colombia":     { group: "K", gp: 3, w: 2, d: 0, l: 1, gf: 5, ga: 2, pts: 6, pos: 1, ko: true, flag: "🇨🇴" },
+  "Portugal":     { group: "K", gp: 3, w: 1, d: 1, l: 1, gf: 6, ga: 1, pts: 4, pos: 2, ko: true, flag: "🇵🇹" },
+  "DR Congo":     { group: "K", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 2, pts: 4, pos: 3, ko: true, flag: "🇨🇩" },
+  "Uzbekistan":   { group: "K", gp: 3, w: 0, d: 0, l: 3, gf: 0, ga: 7, pts: 0, pos: 4, ko: false, flag: "🇺🇿" },
+  "England":      { group: "L", gp: 3, w: 2, d: 1, l: 0, gf: 5, ga: 1, pts: 7, pos: 1, ko: true, flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  "Croatia":      { group: "L", gp: 3, w: 2, d: 0, l: 1, gf: 3, ga: 3, pts: 6, pos: 2, ko: true, flag: "🇭🇷" },
+  "Ghana":        { group: "L", gp: 3, w: 1, d: 1, l: 1, gf: 3, ga: 3, pts: 4, pos: 3, ko: true, flag: "🇬🇭" },
+  "Panama":       { group: "L", gp: 3, w: 0, d: 0, l: 3, gf: 1, ga: 5, pts: 0, pos: 4, ko: false, flag: "🇵🇦" }
+};
+
+const BETTING_ODDS = {
+  "France": 360, "Argentina": 520, "Spain": 600, "England": 750,
+  "Portugal": 950, "Brazil": 1200, "Netherlands": 1400, "Germany": 1500,
+  "USA": 2800, "Norway": 3300, "Belgium": 4000, "Morocco": 4500,
+  "Japan": 4500, "Colombia": 4500, "Mexico": 5000, "Switzerland": 7000,
+  "Ecuador": 9000, "Senegal": 10000, "Croatia": 11000, "Côte d'Ivoire": 11000,
+  "Canada": 15000, "Austria": 20000, "Sweden": 20000, "Australia": 20000,
+  "Egypt": 25000, "South Korea": 25000, "Algeria": 30000, "Scotland": 30000,
+  "Ghana": 40000, "Paraguay": 45000, "Bosnia and Herzegovina": 50000,
+  "Iran": 70000, "DR Congo": 100000, "South Africa": 100000,
+  "Cabo Verde": 150000, "Uzbekistan": 250000
+};
+
+function oddsToProb(odds) { return odds ? (100 / (odds / 100 + 1)) : 0; }
+
+function getTeamOwner(teamName) {
+  for (const [player, data] of Object.entries(PLAYERS)) {
+    const n = data.teams.map(t => t.toLowerCase());
+    if (n.includes(teamName.toLowerCase())) return player;
+    if (teamName === "Cape Verde" && n.includes("cabo verde")) return player;
+    if (teamName === "Ivory Coast" && n.includes("côte d'ivoire")) return player;
+  }
+  if (CHARITY_TEAMS.some(t => t.toLowerCase() === teamName.toLowerCase())) return "Charity";
+  if (teamName === "Ivory Coast" || teamName === "Côte d'Ivoire") return "Charity";
+  return null;
+}
+
+const R32_MATCHES = [
+  { id: 1, home: "South Africa", away: "Canada", date: "Jun 28", time: "3:00 PM ET", venue: "SoFi Stadium, Los Angeles", result: null },
+  { id: 2, home: "Brazil", away: "Japan", date: "Jun 29", time: "1:00 PM ET", venue: "NRG Stadium, Houston", result: null },
+  { id: 3, home: "Germany", away: "Paraguay", date: "Jun 29", time: "4:30 PM ET", venue: "Gillette Stadium, Boston", result: null },
+  { id: 4, home: "Netherlands", away: "Morocco", date: "Jun 29", time: "9:00 PM ET", venue: "Estadio BBVA, Monterrey", result: null },
+  { id: 5, home: "Côte d'Ivoire", away: "Norway", date: "Jun 30", time: "1:00 PM ET", venue: "AT&T Stadium, Dallas", result: null },
+  { id: 6, home: "France", away: "Sweden", date: "Jun 30", time: "5:00 PM ET", venue: "MetLife Stadium, New Jersey", result: null },
+  { id: 7, home: "Mexico", away: "Ecuador", date: "Jun 30", time: "9:00 PM ET", venue: "Estadio Azteca, Mexico City", result: null },
+  { id: 8, home: "England", away: "DR Congo", date: "Jul 1", time: "12:00 PM ET", venue: "Mercedes-Benz Stadium, Atlanta", result: null },
+  { id: 9, home: "Belgium", away: "Senegal", date: "Jul 1", time: "1:00 PM ET", venue: "Lumen Field, Seattle", result: null },
+  { id: 10, home: "USA", away: "Bosnia and Herzegovina", date: "Jul 1", time: "8:00 PM ET", venue: "Levi's Stadium, Santa Clara", result: null },
+  { id: 11, home: "Spain", away: "Austria", date: "Jul 2", time: "3:00 PM ET", venue: "SoFi Stadium, Los Angeles", result: null },
+  { id: 12, home: "Portugal", away: "Croatia", date: "Jul 2", time: "7:00 PM ET", venue: "BMO Field, Toronto", result: null },
+  { id: 13, home: "Switzerland", away: "Algeria", date: "Jul 2", time: "TBD", venue: "TBD", result: null },
+  { id: 14, home: "Australia", away: "Egypt", date: "Jul 3", time: "2:00 PM ET", venue: "AT&T Stadium, Dallas", result: null },
+  { id: 15, home: "Argentina", away: "Cabo Verde", date: "Jul 3", time: "6:00 PM ET", venue: "Hard Rock Stadium, Miami", result: null },
+  { id: 16, home: "Colombia", away: "Ghana", date: "Jul 3", time: "9:30 PM ET", venue: "Arrowhead Stadium, Kansas City", result: null }
+];
+
+const R16_STRUCTURE = [
+  { matchIds: [3, 1], date: "Jul 4", time: "1:00 PM ET" },
+  { matchIds: [6, 12], date: "Jul 4", time: "5:00 PM ET" },
+  { matchIds: [4, 11], date: "Jul 5", time: "4:00 PM ET" },
+  { matchIds: [10, 9], date: "Jul 5", time: "8:00 PM ET" },
+  { matchIds: [7, 8], date: "Jul 6", time: "3:00 PM ET" },
+  { matchIds: [2, 5], date: "Jul 6", time: "8:00 PM ET" },
+  { matchIds: [14, 16], date: "Jul 7", time: "12:00 PM ET" },
+  { matchIds: [15, 13], date: "Jul 7", time: "4:00 PM ET" }
+];
+
+function getMatchPrediction(home, away) {
+  const hOdds = BETTING_ODDS[home] || BETTING_ODDS[Object.keys(BETTING_ODDS).find(k => k.toLowerCase() === home.toLowerCase())] || 100000;
+  const aOdds = BETTING_ODDS[away] || BETTING_ODDS[Object.keys(BETTING_ODDS).find(k => k.toLowerCase() === away.toLowerCase())] || 100000;
+  const hS = 1 / (hOdds + 1), aS = 1 / (aOdds + 1), tot = hS + aS;
+  return { home: Math.round((hS / tot) * 85), draw: 15, away: Math.round((aS / tot) * 85) };
+}
+
+let sideBets = JSON.parse(localStorage.getItem('sideBets') || '[]');
+function saveBets() { localStorage.setItem('sideBets', JSON.stringify(sideBets)); }
+
+function showSection(id, tabEl) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  tabEl.classList.add('active');
+  renderSection(id);
+}
+
+function renderSection(id) {
+  const r = { leaderboard: renderLeaderboard, players: renderPlayers, bracket: renderBracket, matches: renderMatches, sidebets: renderSideBets };
+  r[id]?.();
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboard');
+  const stats = Object.entries(PLAYERS).map(([name, data]) => {
+    const alive = data.teams.filter(t => TEAM_DATA[t]?.ko);
+    const totalProb = alive.reduce((s, t) => s + oddsToProb(BETTING_ODDS[t] || 0), 0);
+    const bestOdds = alive.length ? Math.min(...alive.map(t => BETTING_ODDS[t] || 999999)) : 999999;
+    return { name, teams: data.teams, alive, totalProb, bestOdds, total: data.teams.length };
+  }).sort((a, b) => b.alive.length !== a.alive.length ? b.alive.length - a.alive.length : b.totalProb - a.totalProb);
+
+  let html = `<h2>Leaderboard</h2><p class="section-sub">Knockout stage standings by teams remaining and win probability</p>`;
+  html += '<table class="lb-table"><thead><tr><th></th><th>Player</th><th>Alive</th><th>Win %</th></tr></thead><tbody>';
+  stats.forEach((p, i) => {
+    html += `<tr>
+      <td class="lb-rank-num">${i + 1}</td>
+      <td><div class="lb-name">${p.name}</div><div class="lb-teams">${p.teams.map(t => { const td = TEAM_DATA[t]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div></td>
+      <td class="lb-alive" style="text-align:center">${p.alive.length}/${p.total}</td>
+      <td><div class="lb-prob">${p.totalProb.toFixed(1)}%</div><div class="lb-odds">Best odds +${p.bestOdds < 999999 ? p.bestOdds.toLocaleString() : '—'}</div></td>
+    </tr>`;
+  });
+
+  const charityAlive = CHARITY_TEAMS.filter(t => {
+    const td = TEAM_DATA[t] || TEAM_DATA[Object.keys(TEAM_DATA).find(k => k.toLowerCase() === t.toLowerCase())];
+    return td?.ko;
+  });
+  html += `<tr class="charity-row">
+    <td class="lb-rank-num" style="color:var(--green)"></td>
+    <td><div class="lb-name">Charity</div><div class="lb-teams">${CHARITY_TEAMS.map(t => { const key = Object.keys(TEAM_DATA).find(k => k.toLowerCase() === t.toLowerCase()) || t; const td = TEAM_DATA[key]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div></td>
+    <td style="text-align:center" class="lb-alive">${charityAlive.length}/${CHARITY_TEAMS.length}</td>
+    <td></td>
+  </tr>`;
+  html += '</tbody></table>';
+
+  html += '<div class="prize-box"><div class="prize-item"><div class="prize-label">Winner</div><div class="prize-value">Team wins the World Cup</div></div>';
+  html += '<div class="prize-item"><div class="prize-label">Runner-up</div><div class="prize-value">Team loses the Final</div></div></div>';
+  el.innerHTML = html;
+}
+
+function renderPlayers() {
+  const el = document.getElementById('players');
+  let html = `<h2>Players & Teams</h2><p class="section-sub">Each player's allocated teams and their tournament status</p>`;
+  html += '<div class="players-grid">';
+
+  for (const [name, data] of Object.entries(PLAYERS)) {
+    const alive = data.teams.filter(t => TEAM_DATA[t]?.ko);
+    const totalProb = data.teams.reduce((s, t) => s + (TEAM_DATA[t]?.ko ? oddsToProb(BETTING_ODDS[t] || 0) : 0), 0);
+    html += `<div class="player-card"><div class="player-card-name">${name}</div>`;
+    html += `<div class="player-card-meta">${alive.length} of ${data.teams.length} teams in knockout stage</div>`;
+    for (const team of data.teams) {
+      const td = TEAM_DATA[team];
+      const inKO = td?.ko;
+      const odds = BETTING_ODDS[team];
+      const prob = oddsToProb(odds);
+      html += `<div class="team-row">
+        <span class="team-flag">${td?.flag || '🏳️'}</span>
+        <span class="team-name">${team}</span>
+        <span class="team-status ${inKO ? 'status-alive' : 'status-eliminated'}">${inKO ? 'In' : 'Out'}</span>
+        ${inKO && odds ? `<span class="team-odds-label">+${odds.toLocaleString()}</span><div class="prob-bar-mini"><div class="fill" style="width:${Math.min(prob * 3, 100)}%"></div></div>` : ''}
+      </div>`;
+    }
+    html += `<div class="player-footer"><span>Combined win probability</span><span class="val">${totalProb.toFixed(1)}%</span></div></div>`;
+  }
+
+  html += `<div class="player-card"><div class="player-card-name" style="color:var(--green)">Charity</div>`;
+  html += `<div class="player-card-meta">Unallocated teams</div>`;
+  for (const team of CHARITY_TEAMS) {
+    const key = Object.keys(TEAM_DATA).find(k => k.toLowerCase() === team.toLowerCase()) || team;
+    const td = TEAM_DATA[key]; const inKO = td?.ko;
+    html += `<div class="team-row"><span class="team-flag">${td?.flag || '🏳️'}</span><span class="team-name">${team}</span>
+      <span class="team-status ${inKO ? 'status-alive' : 'status-eliminated'}">${inKO ? 'In' : 'Out'}</span></div>`;
+  }
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
+function renderBracket() {
+  const el = document.getElementById('bracket');
+  let html = `<h2>Knockout Bracket</h2><p class="section-sub">Round of 32 through to the Final on July 19</p>`;
+  html += '<div class="bracket-scroll"><div class="bracket">';
+
+  html += '<div class="round"><div class="round-label">Round of 32</div>';
+  for (const m of R32_MATCHES) {
+    const hO = getTeamOwner(m.home), aO = getTeamOwner(m.away);
+    html += `<div class="bk-match"><div class="bk-match-date">${m.date}</div>
+      <div class="bk-team${m.result && m.result[0] > m.result[1] ? ' winner' : ''}">${TEAM_DATA[m.home]?.flag || ''} ${m.home}${hO ? ` <span class="owner">${hO}</span>` : ''}${m.result ? `<span class="score">${m.result[0]}</span>` : ''}</div>
+      <div class="bk-team${m.result && m.result[1] > m.result[0] ? ' winner' : ''}">${TEAM_DATA[m.away]?.flag || ''} ${m.away}${aO ? ` <span class="owner">${aO}</span>` : ''}${m.result ? `<span class="score">${m.result[1]}</span>` : ''}</div></div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="round"><div class="round-label">Round of 16</div>';
+  for (const r of R16_STRUCTURE) {
+    const m1 = R32_MATCHES.find(m => m.id === r.matchIds[0]), m2 = R32_MATCHES.find(m => m.id === r.matchIds[1]);
+    html += `<div class="bk-match"><div class="bk-match-date">${r.date}</div>
+      <div class="bk-team" style="font-size:0.8em">${m1.home} / ${m1.away}</div>
+      <div class="bk-team" style="font-size:0.8em">${m2.home} / ${m2.away}</div></div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="round"><div class="round-label">Quarter-finals</div>';
+  for (let i = 0; i < 4; i++) html += '<div class="bk-match"><div class="bk-match-date">Jul 10–11</div><div class="bk-team">TBD</div><div class="bk-team">TBD</div></div>';
+  html += '</div>';
+
+  html += '<div class="round"><div class="round-label">Semi-finals</div>';
+  for (let i = 0; i < 2; i++) html += '<div class="bk-match"><div class="bk-match-date">Jul 14–15</div><div class="bk-team">TBD</div><div class="bk-team">TBD</div></div>';
+  html += '</div>';
+
+  html += '<div class="round"><div class="round-label">Final</div>';
+  html += '<div class="bk-match bk-final"><div class="bk-match-date">Jul 19 · MetLife Stadium</div><div class="bk-team">TBD</div><div class="bk-team">TBD</div></div></div>';
+  html += '</div></div>';
+  el.innerHTML = html;
+}
+
+function renderMatches() {
+  const el = document.getElementById('matches');
+  let html = `<h2>Matches</h2><p class="section-sub">Round of 32 fixtures with win probabilities based on tournament odds</p>`;
+  html += '<div class="filter-bar"><select id="matchFilter" onchange="renderMatches()"><option value="all">All matches</option>';
+  Object.keys(PLAYERS).forEach(p => html += `<option value="${p}">${p}</option>`);
+  html += '</select></div>';
+  const filter = document.getElementById('matchFilter')?.value || 'all';
+
+  const days = {};
+  R32_MATCHES.forEach(m => { if (!days[m.date]) days[m.date] = []; days[m.date].push(m); });
+
+  for (const [day, matches] of Object.entries(days)) {
+    const filtered = matches.filter(m => {
+      if (filter === 'all') return true;
+      return getTeamOwner(m.home) === filter || getTeamOwner(m.away) === filter;
+    });
+    if (!filtered.length) continue;
+
+    html += `<div class="match-day"><div class="match-day-label">${day}, 2026</div>`;
+    for (const m of filtered) {
+      const hO = getTeamOwner(m.home), aO = getTeamOwner(m.away);
+      const pred = getMatchPrediction(m.home, m.away);
+      html += `<div class="match-item">
+        <div class="match-meta"><span>${m.time}</span><span>${m.venue}</span></div>
+        <div class="match-line">
+          <div class="team">${TEAM_DATA[m.home]?.flag || ''} ${m.home} ${hO ? `<span class="match-owner">${hO}</span>` : ''}</div>
+          <div class="vs">vs</div>
+          <div class="team">${TEAM_DATA[m.away]?.flag || ''} ${m.away} ${aO ? `<span class="match-owner">${aO}</span>` : ''}</div>
+        </div>
+        <div class="match-prob">
+          <div class="prob-bar"><div class="prob-home" style="width:${pred.home}%"></div><div class="prob-draw" style="width:${pred.draw}%"></div><div class="prob-away" style="width:${pred.away}%"></div></div>
+          <div class="prob-labels"><span>${pred.home}%</span><span>Draw ${pred.draw}%</span><span>${pred.away}%</span></div>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderSideBets() {
+  const el = document.getElementById('sidebets');
+  const players = Object.keys(PLAYERS);
+  let html = `<h2>Side Bets</h2><p class="section-sub">Challenge another player on a match outcome or exact score</p>`;
+
+  html += `<div class="bet-form"><h3>Place a bet</h3>
+    <div class="form-row">
+      <div class="form-group"><label>You</label><select id="betFrom"><option value="">Select</option>${players.map(p => `<option value="${p}">${p}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Against</label><select id="betTo"><option value="">Select</option>${players.map(p => `<option value="${p}">${p}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Match</label><select id="betMatch">${R32_MATCHES.map(m => `<option value="${m.id}">${m.home} v ${m.away}</option>`).join('')}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><select id="betType" onchange="toggleScoreBet()"><option value="winner">Match winner</option><option value="score">Correct score</option></select></div>
+      <div class="form-group"><label>Your pick</label><select id="betPick"></select></div>
+      <div class="form-group" id="scoreGroup" style="display:none"><label>Score</label><input type="text" id="betScore" placeholder="2-1"></div>
+      <div class="form-group"><label>Stake</label><input type="text" id="betStake" placeholder="e.g. a pint"></div>
+    </div>
+    <button class="btn btn-primary" onclick="placeBet()">Place bet</button>
+  </div>`;
+
+  const pending = sideBets.filter(b => b.status === 'pending');
+  const accepted = sideBets.filter(b => b.status === 'accepted');
+  const settled = sideBets.filter(b => b.status === 'settled');
+
+  if (pending.length) {
+    html += '<div class="bets-section-label">Pending</div>';
+    pending.forEach(b => {
+      const match = R32_MATCHES.find(m => m.id === parseInt(b.matchId));
+      html += `<div class="bet-card"><div class="bet-top"><span class="bet-status pending">Awaiting response</span><span class="bet-stake">${b.stake}</span></div>
+        <div class="bet-players"><strong>${b.from}</strong> challenges <strong>${b.to}</strong></div>
+        <div class="bet-match-info">${match ? match.home + ' v ' + match.away : ''} · ${b.type === 'score' ? 'Score: ' + b.score : b.pick}</div>
+        <div class="bet-actions"><button class="btn btn-accept" onclick="acceptBet(${sideBets.indexOf(b)})">Accept</button><button class="btn btn-decline" onclick="declineBet(${sideBets.indexOf(b)})">Decline</button></div></div>`;
+    });
+  }
+  if (accepted.length) {
+    html += '<div class="bets-section-label">Active</div>';
+    accepted.forEach(b => {
+      const match = R32_MATCHES.find(m => m.id === parseInt(b.matchId));
+      html += `<div class="bet-card"><div class="bet-top"><span class="bet-status accepted">Accepted</span><span class="bet-stake">${b.stake}</span></div>
+        <div class="bet-players"><strong>${b.from}</strong> vs <strong>${b.to}</strong></div>
+        <div class="bet-match-info">${match ? match.home + ' v ' + match.away : ''} · ${b.from} picks: ${b.type === 'score' ? b.score : b.pick}</div></div>`;
+    });
+  }
+  if (settled.length) {
+    html += '<div class="bets-section-label">Settled</div>';
+    settled.forEach(b => {
+      html += `<div class="bet-card"><div class="bet-top"><span class="bet-status settled">Settled</span><span class="bet-stake">${b.stake}</span></div>
+        <div class="bet-players"><strong>${b.from}</strong> vs <strong>${b.to}</strong> · ${b.winner || 'TBD'} wins</div></div>`;
+    });
+  }
+  if (!sideBets.length) html += '<div class="no-bets">No bets placed yet.</div>';
+  el.innerHTML = html;
+  updatePickOptions();
+}
+
+function toggleScoreBet() {
+  document.getElementById('scoreGroup').style.display = document.getElementById('betType').value === 'score' ? 'block' : 'none';
+  updatePickOptions();
+}
+
+function updatePickOptions() {
+  const ms = document.getElementById('betMatch'), ps = document.getElementById('betPick'), ts = document.getElementById('betType');
+  if (!ms || !ps) return;
+  const match = R32_MATCHES.find(m => m.id === parseInt(ms.value));
+  if (!match) return;
+  ps.innerHTML = ts.value === 'winner'
+    ? `<option value="${match.home}">${match.home}</option><option value="Draw">Draw</option><option value="${match.away}">${match.away}</option>`
+    : `<option value="${match.home}">${match.home} wins</option><option value="${match.away}">${match.away} wins</option>`;
+}
+
+document.addEventListener('change', e => { if (e.target.id === 'betMatch') updatePickOptions(); });
+
+function placeBet() {
+  const from = document.getElementById('betFrom').value, to = document.getElementById('betTo').value;
+  const matchId = document.getElementById('betMatch').value, type = document.getElementById('betType').value;
+  const pick = document.getElementById('betPick').value, stake = document.getElementById('betStake').value;
+  const score = document.getElementById('betScore')?.value || '';
+  if (!from || !to || !stake) { alert('Please fill in all fields.'); return; }
+  if (from === to) { alert('Cannot bet against yourself.'); return; }
+  sideBets.push({ from, to, matchId, type, pick, score, stake, status: 'pending', created: new Date().toISOString() });
+  saveBets(); renderSideBets();
+}
+
+function acceptBet(i) { sideBets[i].status = 'accepted'; saveBets(); renderSideBets(); }
+function declineBet(i) { sideBets[i].status = 'declined'; saveBets(); renderSideBets(); }
+
+renderLeaderboard();
+</script>
+</body>
+</html>

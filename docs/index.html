@@ -66,9 +66,13 @@ h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bott
 
 /* Prize */
 .prize-box { display: flex; gap: 1px; background: var(--border); margin-top: 32px; }
-.prize-item { flex: 1; background: var(--white); padding: 24px; text-align: center; }
-.prize-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 4px; }
-.prize-value { font-family: var(--serif); font-size: 1.1em; font-weight: 700; }
+.prize-item { flex: 1; background: var(--white); padding: 20px; text-align: center; }
+.prize-label { font-size: 0.75em; color: var(--text3); margin-bottom: 6px; }
+.prize-value { font-family: var(--serif); font-size: 1.8em; font-weight: 700; line-height: 1; }
+.prize-desc { font-size: 0.75em; color: var(--text3); margin-top: 4px; }
+.prize-candidate { font-size: 0.85em; font-weight: 600; color: var(--accent); margin-top: 6px; }
+.pot-summary { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.8em; color: var(--text2); padding: 10px 0; border-top: 1px solid var(--border-light); }
+.pot-check { color: var(--green); }
 
 /* Player cards */
 .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1px; background: var(--border); }
@@ -366,23 +370,51 @@ function renderSection(id) {
   r[id]?.();
 }
 
+function getPlayerGroupStats(teams) {
+  let pts = 0, gd = 0;
+  teams.forEach(t => {
+    const td = TEAM_DATA[t];
+    if (td) { pts += td.pts; gd += (td.gf - td.ga); }
+  });
+  return { pts, gd };
+}
+
 function renderLeaderboard() {
   const el = document.getElementById('leaderboard');
+  const ENTRY = 10, NUM_PLAYERS = Object.keys(PLAYERS).length;
+  const POT = ENTRY * NUM_PLAYERS; // £70
+
   const stats = Object.entries(PLAYERS).map(([name, data]) => {
     const alive = data.teams.filter(t => TEAM_DATA[t]?.ko);
     const totalProb = alive.reduce((s, t) => s + oddsToProb(BETTING_ODDS[t] || 0), 0);
     const bestOdds = alive.length ? Math.min(...alive.map(t => BETTING_ODDS[t] || 999999)) : 999999;
-    return { name, teams: data.teams, alive, totalProb, bestOdds, total: data.teams.length };
+    const { pts, gd } = getPlayerGroupStats(data.teams);
+    return { name, teams: data.teams, alive, totalProb, bestOdds, total: data.teams.length, pts, gd };
   }).sort((a, b) => b.alive.length !== a.alive.length ? b.alive.length - a.alive.length : b.totalProb - a.totalProb);
 
-  let html = `<h2>Leaderboard</h2><p class="section-sub">Knockout stage standings by teams remaining and win probability</p>`;
-  html += '<table class="lb-table"><thead><tr><th></th><th>Player</th><th>Alive</th><th>Win %</th></tr></thead><tbody>';
+  // Wooden spoon: fewest teams alive, then lowest group stage pts, then worst GD
+  const spoonStats = [...stats].sort((a, b) =>
+    a.alive.length !== b.alive.length ? a.alive.length - b.alive.length :
+    a.pts !== b.pts ? a.pts - b.pts : a.gd - b.gd
+  );
+  const spoon = spoonStats[0];
+
+  let html = `<h2>Leaderboard</h2><p class="section-sub">£${ENTRY} entry each &bull; £${POT} total pot</p>`;
+  html += '<table class="lb-table"><thead><tr><th></th><th>Player</th><th>Alive</th><th>Win %</th><th>Prize</th></tr></thead><tbody>';
+
   stats.forEach((p, i) => {
+    const isSpoon = p.name === spoon.name;
+    let prize = '', prizeStyle = '';
+    if (i === 0) { prize = '🥇 £50'; prizeStyle = 'color:var(--gold);font-weight:600'; }
+    else if (i === 1) { prize = '🥈 £15'; prizeStyle = 'color:var(--text2);font-weight:600'; }
+    else if (isSpoon) { prize = '🥄 £5'; prizeStyle = 'color:var(--accent2);font-weight:600'; }
+
     html += `<tr>
       <td class="lb-rank-num">${i + 1}</td>
       <td><div class="lb-name">${p.name}</div><div class="lb-teams">${p.teams.map(t => { const td = TEAM_DATA[t]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div></td>
       <td class="lb-alive" style="text-align:center">${p.alive.length}/${p.total}</td>
-      <td><div class="lb-prob">${p.totalProb.toFixed(1)}%</div><div class="lb-odds">Best odds +${p.bestOdds < 999999 ? p.bestOdds.toLocaleString() : '—'}</div></td>
+      <td><div class="lb-prob">${p.totalProb.toFixed(1)}%</div><div class="lb-odds">Best +${p.bestOdds < 999999 ? p.bestOdds.toLocaleString() : '—'}</div></td>
+      <td style="${prizeStyle};white-space:nowrap">${prize}</td>
     </tr>`;
   });
 
@@ -391,15 +423,38 @@ function renderLeaderboard() {
     return td?.ko;
   });
   html += `<tr class="charity-row">
-    <td class="lb-rank-num" style="color:var(--green)"></td>
+    <td class="lb-rank-num"></td>
     <td><div class="lb-name">Charity</div><div class="lb-teams">${CHARITY_TEAMS.map(t => { const key = Object.keys(TEAM_DATA).find(k => k.toLowerCase() === t.toLowerCase()) || t; const td = TEAM_DATA[key]; const isAlive = td?.ko; return isAlive ? (td?.flag || '') + ' ' + t : '<span class="lb-elim">' + (td?.flag || '') + ' ' + t + '</span>'; }).join(' · ')}</div></td>
     <td style="text-align:center" class="lb-alive">${charityAlive.length}/${CHARITY_TEAMS.length}</td>
-    <td></td>
+    <td></td><td></td>
   </tr>`;
   html += '</tbody></table>';
 
-  html += '<div class="prize-box"><div class="prize-item"><div class="prize-label">Winner</div><div class="prize-value">Team wins the World Cup</div></div>';
-  html += '<div class="prize-item"><div class="prize-label">Runner-up</div><div class="prize-value">Team loses the Final</div></div></div>';
+  html += `<div class="prize-box">
+    <div class="prize-item">
+      <div class="prize-label">🥇 Winner</div>
+      <div class="prize-value">£50</div>
+      <div class="prize-desc">Team wins the World Cup</div>
+      <div class="prize-candidate">${stats[0]?.name}</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-label">🥈 Runner-up</div>
+      <div class="prize-value">£15</div>
+      <div class="prize-desc">Team loses the Final</div>
+      <div class="prize-candidate">${stats[1]?.name}</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-label">🥄 Wooden Spoon</div>
+      <div class="prize-value">£5</div>
+      <div class="prize-desc">Fewest teams, worst GD</div>
+      <div class="prize-candidate">${spoon?.name}</div>
+    </div>
+  </div>
+  <div class="pot-summary">
+    <span>${NUM_PLAYERS} players × £${ENTRY} = <strong>£${POT} pot</strong></span>
+    <span class="pot-check">£50 + £15 + £5 = £${50+15+5} ✓</span>
+  </div>`;
+
   el.innerHTML = html;
 }
 

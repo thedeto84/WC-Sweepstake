@@ -153,6 +153,30 @@ h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bott
 .bet-actions { margin-top: 8px; display: flex; gap: 8px; }
 .no-bets { padding: 40px 0; text-align: center; color: var(--text3); font-size: 0.9em; }
 
+/* Update bar */
+.update-bar { max-width: 720px; margin: 0 auto; padding: 8px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-light); background: var(--bg); }
+.update-bar .last-sync { font-size: 0.75em; color: var(--text3); }
+.sync-btn { font-size: 0.75em; font-family: var(--sans); font-weight: 500; padding: 4px 12px; border: 1px solid var(--border); background: var(--white); color: var(--text2); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.sync-btn:hover { border-color: var(--text); color: var(--text); }
+.sync-btn.loading { opacity: 0.6; pointer-events: none; }
+.sync-btn .spinner { display: inline-block; width: 10px; height: 10px; border: 1.5px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.sync-status { font-size: 0.75em; color: var(--green); }
+.sync-error { font-size: 0.75em; color: var(--accent2); }
+
+/* Results admin */
+.results-panel { background: var(--white); border: 1px solid var(--border); padding: 24px; margin-bottom: 24px; }
+.results-panel h3 { margin-bottom: 4px; }
+.results-panel .sub { font-size: 0.8em; color: var(--text2); margin-bottom: 16px; }
+.result-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 0.85em; }
+.result-row:last-child { border-bottom: none; }
+.result-teams { flex: 1; }
+.result-score { display: flex; align-items: center; gap: 4px; }
+.result-score input { width: 36px; text-align: center; padding: 4px; border: 1px solid var(--border); font-family: var(--sans); font-size: 0.9em; }
+.result-score .dash { color: var(--text3); }
+.result-save { font-size: 0.75em; color: var(--accent); cursor: pointer; font-weight: 500; background: none; border: none; font-family: var(--sans); padding: 0 4px; }
+.result-saved { font-size: 0.75em; color: var(--green); }
+
 /* Responsive */
 @media (max-width: 600px) {
   .header h1 { font-size: 2em; }
@@ -172,12 +196,21 @@ h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bott
   <p>FIFA World Cup &bull; USA, Canada &amp; Mexico</p>
 </div>
 
+<div class="update-bar">
+  <span class="last-sync" id="lastSync">Results not yet synced</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="syncStatus"></span>
+    <button class="sync-btn" id="syncBtn" onclick="syncResults()">&#8635; Update Results</button>
+  </div>
+</div>
+
 <div class="nav">
   <div class="nav-item active" onclick="showSection('leaderboard', this)">Leaderboard</div>
   <div class="nav-item" onclick="showSection('players', this)">Players</div>
   <div class="nav-item" onclick="showSection('bracket', this)">Bracket</div>
   <div class="nav-item" onclick="showSection('matches', this)">Matches</div>
   <div class="nav-item" onclick="showSection('sidebets', this)">Side Bets</div>
+  <div class="nav-item" onclick="showSection('admin', this)">&#9881; Results</div>
 </div>
 
 <div class="container">
@@ -186,6 +219,7 @@ h3 { font-family: var(--serif); font-size: 1.15em; font-weight: 700; margin-bott
   <div id="bracket" class="section"></div>
   <div id="matches" class="section"></div>
   <div id="sidebets" class="section"></div>
+  <div id="admin" class="section"></div>
 </div>
 
 <script>
@@ -328,7 +362,7 @@ function showSection(id, tabEl) {
 }
 
 function renderSection(id) {
-  const r = { leaderboard: renderLeaderboard, players: renderPlayers, bracket: renderBracket, matches: renderMatches, sidebets: renderSideBets };
+  const r = { leaderboard: renderLeaderboard, players: renderPlayers, bracket: renderBracket, matches: renderMatches, sidebets: renderSideBets, admin: renderAdmin };
   r[id]?.();
 }
 
@@ -568,6 +602,136 @@ function placeBet() {
 
 function acceptBet(i) { sideBets[i].status = 'accepted'; saveBets(); renderSideBets(); }
 function declineBet(i) { sideBets[i].status = 'declined'; saveBets(); renderSideBets(); }
+
+// ── Results / Sync ────────────────────────────────────────────────
+let manualResults = JSON.parse(localStorage.getItem('manualResults') || '{}');
+function saveManualResults() { localStorage.setItem('manualResults', JSON.stringify(manualResults)); }
+
+function applyStoredResults() {
+  R32_MATCHES.forEach(m => {
+    if (manualResults[m.id]) m.result = manualResults[m.id];
+  });
+}
+
+// ESPN team name → our name mapping
+const ESPN_MAP = {
+  'South Africa': 'South Africa', 'Canada': 'Canada',
+  'Brazil': 'Brazil', 'Japan': 'Japan',
+  'Germany': 'Germany', 'Paraguay': 'Paraguay',
+  'Netherlands': 'Netherlands', 'Morocco': 'Morocco',
+  "Côte d'Ivoire": "Côte d'Ivoire", 'Ivory Coast': "Côte d'Ivoire",
+  'Norway': 'Norway', 'France': 'France', 'Sweden': 'Sweden',
+  'Mexico': 'Mexico', 'Ecuador': 'Ecuador',
+  'England': 'England', 'DR Congo': 'DR Congo', 'Congo DR': 'DR Congo',
+  'Belgium': 'Belgium', 'Senegal': 'Senegal',
+  'USA': 'USA', 'United States': 'USA',
+  'Bosnia and Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
+  'Spain': 'Spain', 'Austria': 'Austria',
+  'Portugal': 'Portugal', 'Croatia': 'Croatia',
+  'Switzerland': 'Switzerland', 'Algeria': 'Algeria',
+  'Australia': 'Australia', 'Egypt': 'Egypt',
+  'Argentina': 'Argentina', 'Cape Verde': 'Cabo Verde', 'Cabo Verde': 'Cabo Verde',
+  'Colombia': 'Colombia', 'Ghana': 'Ghana'
+};
+
+async function syncResults() {
+  const btn = document.getElementById('syncBtn');
+  const status = document.getElementById('syncStatus');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> Updating…';
+  status.innerHTML = '';
+
+  try {
+    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard');
+    if (!res.ok) throw new Error('Network error');
+    const data = await res.json();
+    let updated = 0;
+
+    (data.events || []).forEach(event => {
+      const comp = event.competitions?.[0];
+      if (!comp) return;
+      const status = comp.status?.type;
+      if (!status?.completed) return;
+
+      const teams = comp.competitors || [];
+      if (teams.length < 2) return;
+      const home = ESPN_MAP[teams[0].team?.displayName] || teams[0].team?.displayName;
+      const away = ESPN_MAP[teams[1].team?.displayName] || teams[1].team?.displayName;
+      const hScore = parseInt(teams[0].score);
+      const aScore = parseInt(teams[1].score);
+      if (isNaN(hScore) || isNaN(aScore)) return;
+
+      const match = R32_MATCHES.find(m =>
+        (m.home === home && m.away === away) ||
+        (m.home === away && m.away === home)
+      );
+      if (match) {
+        const result = (match.home === home) ? [hScore, aScore] : [aScore, hScore];
+        match.result = result;
+        manualResults[match.id] = result;
+        updated++;
+      }
+    });
+
+    saveManualResults();
+    const now = new Date();
+    document.getElementById('lastSync').textContent = `Last updated ${now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    status.className = 'sync-status';
+    status.textContent = updated > 0 ? `${updated} result${updated > 1 ? 's' : ''} updated` : 'No new results';
+    const active = document.querySelector('.nav-item.active');
+    if (active) renderSection(document.querySelector('.section.active')?.id);
+  } catch (e) {
+    status.className = 'sync-error';
+    status.textContent = 'Sync failed — enter results manually below';
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '&#8635; Update Results';
+}
+
+function renderAdmin() {
+  const el = document.getElementById('admin');
+  let html = `<h2>Enter Results</h2><p class="section-sub">Manually enter scores for completed matches — saved in your browser</p>`;
+  html += '<div class="results-panel">';
+  html += '<div class="results-panel sub">Click "Save" next to each match after entering the score.</div>';
+
+  R32_MATCHES.forEach(m => {
+    const r = m.result;
+    html += `<div class="result-row">
+      <div class="result-teams">${TEAM_DATA[m.home]?.flag || ''} ${m.home} v ${TEAM_DATA[m.away]?.flag || ''} ${m.away} <span style="color:var(--text3);font-size:0.85em">${m.date}</span></div>
+      <div class="result-score">
+        <input type="number" id="rs_h_${m.id}" min="0" max="20" value="${r ? r[0] : ''}" placeholder="-">
+        <span class="dash">–</span>
+        <input type="number" id="rs_a_${m.id}" min="0" max="20" value="${r ? r[1] : ''}" placeholder="-">
+      </div>
+      <button class="result-save" onclick="saveResult(${m.id})">Save</button>
+      ${r ? `<span class="result-saved">✓</span>` : ''}
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function saveResult(matchId) {
+  const h = parseInt(document.getElementById(`rs_h_${matchId}`).value);
+  const a = parseInt(document.getElementById(`rs_a_${matchId}`).value);
+  if (isNaN(h) || isNaN(a)) { alert('Enter both scores'); return; }
+  const match = R32_MATCHES.find(m => m.id === matchId);
+  if (!match) return;
+  match.result = [h, a];
+  manualResults[matchId] = [h, a];
+  saveManualResults();
+  renderAdmin();
+  // refresh any visible tab
+  const active = document.querySelector('.section.active');
+  if (active && active.id !== 'admin') renderSection(active.id);
+}
+
+// Load saved results on startup
+applyStoredResults();
+const lastSync = localStorage.getItem('lastSync');
+if (lastSync) document.getElementById('lastSync').textContent = `Last updated ${lastSync}`;
 
 renderLeaderboard();
 </script>

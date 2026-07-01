@@ -760,37 +760,49 @@ const ESPN_MAP = {
   "Côte d'Ivoire": "Côte d'Ivoire", 'Ivory Coast': "Côte d'Ivoire",
   'Norway': 'Norway', 'France': 'France', 'Sweden': 'Sweden',
   'Mexico': 'Mexico', 'Ecuador': 'Ecuador',
-  'England': 'England', 'DR Congo': 'DR Congo', 'Congo DR': 'DR Congo',
+  'England': 'England',
+  'DR Congo': 'DR Congo', 'Congo DR': 'DR Congo', 'Democratic Republic of Congo': 'DR Congo',
   'Belgium': 'Belgium', 'Senegal': 'Senegal',
   'USA': 'USA', 'United States': 'USA',
   'Bosnia and Herzegovina': 'Bosnia and Herzegovina',
   'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
   'Spain': 'Spain', 'Austria': 'Austria',
   'Portugal': 'Portugal', 'Croatia': 'Croatia',
   'Switzerland': 'Switzerland', 'Algeria': 'Algeria',
   'Australia': 'Australia', 'Egypt': 'Egypt',
   'Argentina': 'Argentina', 'Cape Verde': 'Cabo Verde', 'Cabo Verde': 'Cabo Verde',
-  'Colombia': 'Colombia', 'Ghana': 'Ghana'
+  'Colombia': 'Colombia', 'Ghana': 'Ghana',
+  'Turkey': 'Türkiye', 'Curacao': 'Curaçao'
 };
+
+// ESPN scoreboard only returns today's matches by default — fetch every R32 match date explicitly
+const ESPN_DATES = ['20260628','20260629','20260630','20260701','20260702','20260703'];
 
 async function syncResults() {
   const btn = document.getElementById('syncBtn');
-  const status = document.getElementById('syncStatus');
+  const statusEl = document.getElementById('syncStatus');
   btn.classList.add('loading');
   btn.innerHTML = '<span class="spinner"></span> Updating…';
-  status.innerHTML = '';
+  statusEl.innerHTML = '';
 
   try {
-    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard');
-    if (!res.ok) throw new Error('Network error');
-    const data = await res.json();
-    let updated = 0;
+    const responses = await Promise.all(
+      ESPN_DATES.map(d =>
+        fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${d}`)
+          .then(r => r.ok ? r.json() : { events: [] })
+          .catch(() => ({ events: [] }))
+      )
+    );
 
-    (data.events || []).forEach(event => {
+    let updated = 0;
+    const allEvents = responses.flatMap(data => data.events || []);
+
+    allEvents.forEach(event => {
       const comp = event.competitions?.[0];
       if (!comp) return;
-      const status = comp.status?.type;
-      if (!status?.completed) return;
+      const compStatus = comp.status?.type;
+      if (!compStatus?.completed) return;
 
       const teams = comp.competitors || [];
       if (teams.length < 2) return;
@@ -814,14 +826,16 @@ async function syncResults() {
 
     saveManualResults();
     const now = new Date();
-    document.getElementById('lastSync').textContent = `Last updated ${now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
-    status.className = 'sync-status';
-    status.textContent = updated > 0 ? `${updated} result${updated > 1 ? 's' : ''} updated` : 'No new results';
-    const active = document.querySelector('.nav-item.active');
-    if (active) renderSection(document.querySelector('.section.active')?.id);
+    const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('lastSync').textContent = `Last updated ${timeStr}`;
+    localStorage.setItem('lastSync', timeStr);
+    statusEl.className = 'sync-status';
+    statusEl.textContent = updated > 0 ? `${updated} result${updated > 1 ? 's' : ''} updated` : 'No new results';
+    const activeSection = document.querySelector('.section.active');
+    if (activeSection) renderSection(activeSection.id);
   } catch (e) {
-    status.className = 'sync-error';
-    status.textContent = 'Sync failed — enter results manually below';
+    statusEl.className = 'sync-error';
+    statusEl.textContent = 'Sync failed — enter results manually below';
   }
 
   btn.classList.remove('loading');
